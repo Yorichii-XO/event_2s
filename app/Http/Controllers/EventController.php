@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Event;
 use App\Models\Rank;
 use App\Models\Register;
+use App\Models\Comment;
+use App\Models\User;
 
 use Illuminate\Support\Facades\Auth;
 
@@ -13,41 +15,60 @@ class EventController extends Controller
 {
     public function index()
     {
-        $events = Event::with('user', 'comments')->get();
+        // Retrieve the authenticated user's ID
+        $userId = Auth::id();
+    
+        // Retrieve the events for the authenticated user
+        $events = Event::with('user', 'comments')->where('user_id', $userId)->get();
+    
+        // Return the view with the events
         return view('events.index', compact('events'));
     }
-
     public function create()
     {
         return view('events.create');
     }
 
+    
     public function store(Request $request)
     {
-       
-            $validatedData = $request->validate([
-                'title' => 'required|max:255',
-                'description' => 'required',
-                'date' => 'required|date',
-                'time' => 'required',
-                'price' => 'nullable|numeric',
-                'major' => 'required',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Adjust max file size as needed
-            ]);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'date' => 'required|date',
+            'heur' => 'required',
+            'price' => 'nullable|string',
+            'major' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
     
-            // If an image was uploaded, store it
+        try {
+            $event = new Event();
+            $event->title = $request->title;
+            $event->description = $request->description;
+            $event->date = $request->date;
+            $event->heur = $request->heur;
+            $event->price = $request->price;
+            $event->major = $request->major;
+            $event->user_id = Auth::id();
+    
             if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('assets/storage/');
-                $validatedData['image'] = $imagePath;
+                $image = $request->file('image');
+                $imageName = $image->getClientOriginalName();
+                $imagePath = public_path('assets/storage/');
+                $image->move($imagePath, $imageName);
+                $event->image = 'assets/storage/' . $imageName;
             }
     
-            // Create the event using the validated data
-            $event = Event::create($validatedData);
+            $event->save();
     
-            // Redirect back with success message
-            return redirect()->back()->with('success', 'Event created successfully.');
-        
+            return redirect()->route('events.index')->with('success', 'Event creted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('events.index')->with('success', 'Event creted successfully.');
+        }
     }
+    
+
     
     public function edit(Event $event)
     {
@@ -124,4 +145,23 @@ public function unregister(Event $event)
 
     return redirect()->back()->with('success', 'You have successfully unregistered from the event.');
 }
+public function comments($eventId)
+{
+    $event = Event::with(['comments.user', 'user'])->findOrFail($eventId);
+    return response()->json(['event' => $event, 'comments' => $event->comments]);
+}
+public function deleteComment($eventId, $commentId)
+{
+    $comment = Comment::findOrFail($commentId);
+    $user = Auth::user();
+
+    // Check if the user is authorized to delete the comment
+    if ($user->id == $comment->user_id) {
+        $comment->delete();
+        return response()->json(['success' => true]);
+    } else {
+        return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+    }
+}
+
 }

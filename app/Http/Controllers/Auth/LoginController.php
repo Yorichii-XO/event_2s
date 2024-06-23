@@ -23,7 +23,7 @@ class LoginController extends Controller
 
             // Authentication passed...
             if ($user->role == 'admin') {
-                return redirect()->route('dashboard');
+                return redirect('/');
             } else {
                 return redirect('/')->with('success', 'Login successful!');;
             }

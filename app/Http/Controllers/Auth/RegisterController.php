@@ -31,7 +31,7 @@ class RegisterController extends Controller
         ]);
 
         // Flash a success message to the session
-        return redirect('/login')->with('success', 'Registration successful!');
+        return redirect('auth.login')->with('success', 'Registration successful!');
     }
 }
 

@@ -30,9 +30,18 @@ class CommentController extends Controller
         $comments = $event->comments;
         return $comments; // This will return the comments as JSON
     }
-    public function destroy(Comment $comment)
+    public function deleteComment($commentId)
     {
-        $comment->delete();
-        return redirect()->back()->with('success', 'Comment deleted successfully.');
+        $comment = Comment::findOrFail($commentId);
+        $user = Auth::user();
+
+        // Check if the user is authorized to delete the comment
+        if ($user->id == $comment->user_id) {
+            $comment->delete();
+            return response()->json(['success' => true]);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
     }
+   
 }
