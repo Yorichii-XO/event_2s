@@ -43,17 +43,14 @@
     </div>
     
     <div class="container mx-auto p-4">
-        <div class="flex justify-end mb-4">
-           <a href="{{ route('events.create') }}"> <span  class="bg-blue-500 text-white px-4 py-2 rounded">Add Event</span></a>
-        </div>
+      
         <div class="flex flex-wrap justify-center gap-6">
             @foreach ($events as $event)
                 <div class="event-item border border-gray-200 rounded-lg overflow-hidden shadow-md relative w-96 mb-4">
                     <div class="absolute top-2 right-2 bg-white p-2 rounded-lg shadow-md">
-                        @if ($event->user_id == Auth::id() || Auth::user()->role == 'admin')
+                        @if (Auth::check() && ($event->user_id == Auth::id() || Auth::user()->role == 'admin'))
                         <a href="{{ route('events.edit', $event) }}"> 
                             <span class="block mb-3 text-green-700">
-
                                 <i class="fa-regular fa-pen-to-square"></i>
                             </span></a>
                             <span class="block text-red-700 mb-3">
@@ -77,11 +74,11 @@
                     <div class="p-4">
                         <div class="mt-4 flex space-x-4">
                             <span class="bg-green-200 text-black w-20 h-7 flex items-center justify-center rounded font-semibold">{{ $event->price ?? 'Free' }}</span>
-                            <span class="bg-gray-200 text-black w-20 h-7 flex items-center justify-center rounded font-semibold">Next.js</span>
+                            <span class="bg-gray-200 text-black w-20 h-7 flex items-center justify-center rounded font-semibold">{{ $event->category }}</span>
                         </div>
                         <div class="mt-4 flex justify-between items-center">
                             <p class="date text-gray-500">{{ $event->date }}</p>
-                            <p class="date text-gray-500">{{ $event->heur }}</p>
+                            <p class="date text-gray-500">{{ $event->time }}</p>
                         </div>
                         <h3 class="title mt-2 text-xl font-semibold">{{ $event->title }}</h3>
                         <p class="description mt-1 text-gray-500 truncate">{{ $event->description }}</p>
@@ -113,7 +110,6 @@
                                     placeholder="Comment..." required />
                                     <button type="submit" class="hidden">Submit</button>
                                 </form>
-                                
                             </div>
                         </div>
                         <div class="mt-4 flex space-x-4">
@@ -147,111 +143,118 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function showComments(eventId) {
-            $.ajax({
-                url: `/events/${eventId}/comments`,
-                method: 'GET',
-                success: function(data) {
-                    console.log('Event Data:', data.event); // Debugging: Log the event data
-                    let commentsHtml = '<div class="flex bg-black p-4 rounded-lg">';
-    
-                    // Display the event image on the left side
-                    commentsHtml += `<div class="mr-4">`;
-                    commentsHtml += `<img src="${data.event.image}" alt="${data.event.title}" class="w-96 h-96 mb-4">`;
-                    commentsHtml += `</div>`;
-    
-                    // Create a container for the creator's info and comments
-                    commentsHtml += '<div class="flex flex-col w-full">';
-    
-                    // Display the name of the event creator if it exists
-                    if (data.event.user) {
-                        commentsHtml += `<div class="flex items-center mb-2">`;
-                        commentsHtml += `<div class="avatar avatar-sm bg-red-200 rounded-full h-10 w-10 flex items-center justify-center text-white font-bold" style="background-color: #${data.event.user.name.substring(0, 6)};">
-                                        <span class="avatar-initial">${data.event.user.name.charAt(0).toUpperCase()}</span>
-                                    </div>`;
-                        commentsHtml += `<div class="ml-4">`;
-                        commentsHtml += `<p class="text-lg text-white font-semibold">${data.event.user.name}</p>`;
-                        commentsHtml += `<p class="text-sm text-white text-gray-500">${data.event.major}</p>`;
-                        commentsHtml += `</div>`;
-                        commentsHtml += `</div>`; // End of creator info div
-                        commentsHtml += `<hr class="my-4">`; // Add a horizontal line
-                    } else {
-                        console.log('User data not found in event data'); // Debugging: Log if user data is missing
-                    }
-    
-                    // Create a container for comments with a white background
-                    commentsHtml += '<div class="bg-black p-4 rounded-lg w-full">';
-                    
-                    data.comments.forEach(comment => {
-                        commentsHtml += '<div class="flex items-start mb-4 gap-2">';
-                        
-                        // Display avatar
-                        commentsHtml += `<div class="avatar avatar-sm me-3 bg-blue-700 rounded-full h-10 w-10 flex items-center justify-center text-white font-bold" style="background-color: #${comment.user.name.substring(0, 6)}; ">
-                                    <span class="avatar-initial">${comment.user.name.charAt(0).toUpperCase()}</span>
-                                </div>`;
-                        
-                        // Display comment content
-                        commentsHtml += `<div class="mt-2">`;
-                        commentsHtml += `<p class="text-white"><strong>${comment.user.name}:</strong> ${comment.content}</p>`;
-                        
-                        // Add delete button for authorized users
-                        commentsHtml += `<button class="delete-comment-btn text-sm text-red-500" data-comment-id="${comment.id}" onclick="deleteComment(${eventId}, ${comment.id})">Delete</button>`;
-                        
-                        commentsHtml += `</div>`;
-                        
-                        commentsHtml += '</div>'; // End of comment container div
-                    });
-    
-                    commentsHtml += '</div>'; // End of comments container div
-                    commentsHtml += '</div>'; // End of flex container div
-    
-                    commentsHtml += '</div>'; // End of main flex container
-    
-                    Swal.fire({
-                        title: 'Comments',
-                        html: commentsHtml,
-                        width: '800px',
-                        padding: '3em',
-                        background: 'none',
-                        backdrop: `
-                            rgba(0,0,123,0.4)
-                            url("/images/nyan-cat.gif")
-                            left top
-                            no-repeat
-                        `
-                    });
-                },
-                error: function(xhr, status, error) {
-                    Swal.fire('Error', 'Unable to fetch comments.', 'error');
-                }
-            });
-        }
-    
-        document.addEventListener('DOMContentLoaded', function() {
-            window.deleteComment = function(eventId, commentId) {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+     function showComments(eventId) {
+    $.ajax({
+        url: `/events/${eventId}/comments`,
+        method: 'GET',
+        success: function(data) {
+            console.log('Event Data:', data.event); // Debugging: Log the event data
+            let commentsHtml = '<div class="flex bg-black p-2 rounded-lg ">';
+
+            // Display the event image on the left side
+            commentsHtml += `<div class="">`;
+            commentsHtml += `<img src="${data.event.image}" alt="${data.event.title}" class="w-4/5 h-full mb-4 object-cover">`;
+            commentsHtml += `</div>`;
+
+            // Create a container for the creator's info and comments
+            commentsHtml += '<div class="flex flex-col w-full overflow-auto mr-6">';
+
+            // Display the name of the event creator if it exists
+            if (data.event.user) {
+                commentsHtml += `<div class="flex items-center mb-2">`;
+                commentsHtml += `<div class="avatar avatar-sm bg-red-200 rounded-full h-10 w-10 flex items-center justify-center text-white font-bold" style="background-color: #${data.event.user.name.substring(0, 6)};">
+                                <span class="avatar-initial">${data.event.user.name.charAt(0).toUpperCase()}</span>
+                            </div>`;
+                commentsHtml += `<div class="ml-4">`;
+                commentsHtml += `<p class="text-lg text-white font-semibold">${data.event.user.name}</p>`;
+                commentsHtml += `<p class="text-sm text-white text-gray-500">${data.event.major}</p>`;
+                commentsHtml += `</div>`;
+                commentsHtml += `</div>`; // End of creator info div
+                commentsHtml += `<hr class="my-4">`; // Add a horizontal line
+            } else {
+                console.log('User data not found in event data'); // Debugging: Log if user data is missing
+            }
+
+            // Create a container for comments with a white background
+            commentsHtml += '<div class="bg-black p-1 rounded-lg w-full ">';
+            
+            data.comments.forEach(comment => {
+                commentsHtml += '<div class="flex items-start mb-4 gap-2 right-20">';
                 
-                $.ajax({
-                    url: `/comments/${commentId}`,
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire('Success', 'Comment deleted successfully.', 'success');
-                            // Refresh comments after successful deletion
-                            showComments(eventId);  // Make sure to pass the correct eventId
-                        } else {
-                            Swal.fire('Error', response.message, 'error');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        Swal.fire('Error', 'Unable to delete comment.', 'error');
-                    }
-                });
+                // Display avatar
+                commentsHtml += `<div class="avatar avatar-sm me-3 bg-blue-700 rounded-full h-10 w-10 flex items-center justify-center text-white font-bold" style="background-color: #${comment.user.name.substring(0, 6)}; ">
+                            <span class="avatar-initial">${comment.user.name.charAt(0).toUpperCase()}</span>
+                        </div>`;
+                
+                // Display comment content
+                commentsHtml += `<div class="flex right-20 gap-2">`;
+                commentsHtml += `<p class="text-white "><strong>${comment.user.name}:</strong></p>`;
+                 commentsHtml += `</br>`;
+                commentsHtml += `<p class="text-white"> ${comment.content}</p>`;
+
+                // Add delete button for authorized users
+                if (data.currentUser && (data.currentUser.id === data.event.user_id || data.currentUser.role === 'admin')) {
+                    commentsHtml += `<button class="delete-comment-btn text-sm text-red-500" data-comment-id="${comment.id}" onclick="deleteComment(${eventId}, ${comment.id})">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                     </button>`;
+                }
+
+                commentsHtml += `</div>`;
+                
+                commentsHtml += '</div>'; // End of comment container div
+            });
+
+            commentsHtml += '</div>'; // End of comments container div
+            commentsHtml += '</div>'; // End of flex container div
+
+            commentsHtml += '</div>'; // End of main flex container
+
+            Swal.fire({
+                title: 'Comments',
+                html: commentsHtml,
+                width: '800px',
+                padding: '3em',
+                background: 'none',
+                backdrop: `
+                    rgba(0,0,123,0.4)
+                    url("/images/nyan-cat.gif")
+                    left top
+                    no-repeat
+                `
+            });
+        },
+        error: function(xhr, status, error) {
+            Swal.fire('Error', 'Unable to fetch comments.', 'error');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    window.deleteComment = function(eventId, commentId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        $.ajax({
+            url: `/comments/${commentId}`,
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire('Success', 'Comment deleted successfully.', 'success');
+                    // Refresh comments after successful deletion
+                    showComments(eventId);  // Make sure to pass the correct eventId
+                } else {
+                    Swal.fire('Error', response.message, 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                Swal.fire('Error', 'Unable to delete comment.', 'error');
             }
         });
+    }
+});
+
     </script>
 </section>
 @endsection

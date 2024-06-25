@@ -150,8 +150,24 @@ public function comments($eventId)
     $event = Event::with(['comments.user', 'user'])->findOrFail($eventId);
     return response()->json(['event' => $event, 'comments' => $event->comments]);
 }
-public function deleteComment($eventId, $commentId)
+public function showEventComments($eventId)
 {
+    $event = Event::with('user', 'comments.user')->findOrFail($eventId);
+    $user = Auth::user(); // Get the current authenticated user
+
+    return response()->json([
+        'event' => $event,
+        'comments' => $event->comments,
+        'currentUser' => $user ? ['id' => $user->id, 'role' => $user->role] : null // Include current user info
+    ]);
+}
+public function deleteComment($commentId)
+{
+    // Check if the user is authenticated
+    if (!Auth::check()) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+    }
+
     $comment = Comment::findOrFail($commentId);
     $user = Auth::user();
 
@@ -163,5 +179,6 @@ public function deleteComment($eventId, $commentId)
         return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
     }
 }
+
 
 }

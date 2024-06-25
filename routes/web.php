@@ -22,6 +22,8 @@ use App\Http\Controllers\UserController;
 
 
 Route::get('/', [HomeController::class, 'index']);
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
 // Route::get('/', function () {
 //     return view('welcome');
 // });
@@ -52,19 +54,13 @@ Route::post('/events/{event}/register', [EventController::class, 'register'])->n
 Route::delete('/events/{event}/unregister',[EventController::class, 'unregister'])->name('events.unregister');
 Route::get('/events/{event}/comments', [EventController::class, 'comments'])->name('events.comments');
 Route::delete('/comments/{commentId}', [CommentController::class, 'deleteComment'])->name('comments.delete');
-Route::get('/users', [UserController::class, 'index'])->name('users.index');
+Route::get('/events/{eventId}/comments', [EventController::class, 'showEventComments']);
 
-// Show the form for creating a new resource.
-Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
-
-// Store a newly created resource in storage.
-Route::post('/users', [UserController::class, 'store'])->name('users.store');
-
-// Show the form for editing the specified resource.
-Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
-
-// Update the specified resource in storage.
-Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
-
-// Remove the specified resource from storage.
-Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+Route::group(['middleware' => ['auth', 'admin']], function () {
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+});

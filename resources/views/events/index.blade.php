@@ -126,15 +126,15 @@
                 method: 'GET',
                 success: function(data) {
                     console.log('Event Data:', data.event); // Debugging: Log the event data
-                    let commentsHtml = '<div class="flex bg-black p-4 rounded-lg">';
+                    let commentsHtml = '<div class="flex bg-black p-2 rounded-lg ">';
     
                     // Display the event image on the left side
-                    commentsHtml += `<div class="mr-4">`;
-                    commentsHtml += `<img src="${data.event.image}" alt="${data.event.title}" class="w-96 h-96 mb-4">`;
+                    commentsHtml += `<div class="">`;
+                    commentsHtml += `<img src="${data.event.image}" alt="${data.event.title}" class="w-4/5 h-full mb-4 object-cover">`;
                     commentsHtml += `</div>`;
     
                     // Create a container for the creator's info and comments
-                    commentsHtml += '<div class="flex flex-col w-full">';
+                    commentsHtml += '<div class="flex flex-col w-full overflow-auto mr-6">';
     
                     // Display the name of the event creator if it exists
                     if (data.event.user) {
@@ -153,10 +153,10 @@
                     }
     
                     // Create a container for comments with a white background
-                    commentsHtml += '<div class="bg-black p-4 rounded-lg w-full">';
+                    commentsHtml += '<div class="bg-black p-1 rounded-lg w-full ">';
                     
                     data.comments.forEach(comment => {
-                        commentsHtml += '<div class="flex items-start mb-4 gap-2">';
+                        commentsHtml += '<div class="flex items-start mb-4 gap-2 right-20">';
                         
                         // Display avatar
                         commentsHtml += `<div class="avatar avatar-sm me-3 bg-blue-700 rounded-full h-10 w-10 flex items-center justify-center text-white font-bold" style="background-color: #${comment.user.name.substring(0, 6)}; ">
@@ -164,11 +164,13 @@
                                 </div>`;
                         
                         // Display comment content
-                        commentsHtml += `<div class="mt-2">`;
-                        commentsHtml += `<p class="text-white"><strong>${comment.user.name}:</strong> ${comment.content}</p>`;
-                        
+                        commentsHtml += `<div class="flex right-20 gap-2">`;
+                        commentsHtml += `<p class="text-white"><strong>${comment.user.name}:</strong></p>`;
+                         commentsHtml += `</br>`;
+                        commentsHtml += `<p class="text-white"> ${comment.content}</p>`;
+
                         // Add delete button for authorized users
-                        commentsHtml += `<button class="delete-comment-btn text-sm text-red-500" data-comment-id="${comment.id}" onclick="deleteComment(${eventId}, ${comment.id})">Delete</button>`;
+                        commentsHtml += `<button class="delete-comment-btn text-sm text-red-500" data-comment-id="${comment.id}" onclick="deleteComment(${eventId}, ${comment.id})">                                        <i class="fa-regular fa-trash-can"></i></button>`;
                         
                         commentsHtml += `</div>`;
                         

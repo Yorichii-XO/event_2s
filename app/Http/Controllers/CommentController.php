@@ -25,11 +25,18 @@ class CommentController extends Controller
         // Redirect back to the homepage with a success message
         return redirect('/')->with('success', 'Comment added successfully!');
     }
-    public function showComments(Event $event)
+    public function showEventComments($eventId)
     {
-        $comments = $event->comments;
-        return $comments; // This will return the comments as JSON
+        $event = Event::with('user', 'comments.user')->findOrFail($eventId);
+        $user = Auth::user(); // Get the current authenticated user
+    
+        return response()->json([
+            'event' => $event,
+            'comments' => $event->comments,
+            'currentUser' => $user ? ['id' => $user->id, 'role' => $user->role] : null // Include current user info
+        ]);
     }
+    
     public function deleteComment($commentId)
     {
         $comment = Comment::findOrFail($commentId);
