@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CalendarController;
 
 // Define Clerk authentication routes
 /*
@@ -41,20 +42,23 @@ Route::get('/dashboard', function () {
 ##############evnets
 
 
-Route::resource('events', EventController::class);
-Route::get('events/{event}/comments', [EventController::class, 'showComments'])->name('events.comments');
-Route::delete('events/{event}', [EventController::class, 'destroy'])->name('events.delete');
-Route::post('events/{event}/comments', [CommentController::class, 'store'])->name('comments.store');
-Route::get('/events/{eventId}/comments', 'CommentController@getComments')->name('comments.get');
+Route::middleware(['auth'])->group(function () {
+    Route::resource('events', EventController::class);
+    
+    Route::get('events/{event}/comments', [EventController::class, 'showComments'])->name('events.comments');
+    Route::delete('events/{event}', [EventController::class, 'destroy'])->name('events.delete');
+    Route::post('events/{event}/comments', [CommentController::class, 'store'])->name('comments.store');
+    
+    Route::post('/events/{event}/rate', [EventController::class, 'rate'])->name('events.rate');
+    Route::post('/events/{event}/register', [EventController::class, 'register'])->name('events.register');
+    Route::delete('/events/{event}/unregister',[EventController::class, 'unregister'])->name('events.unregister');
+    Route::get('/events/{event}/comments', [EventController::class, 'comments'])->name('events.comments');
+    Route::delete('/comments/{commentId}', [CommentController::class, 'deleteComment'])->name('comments.delete');
+    Route::get('/events/{eventId}/comments', [EventController::class, 'showEventComments']);
+    Route::post('/events/{event}/add-to-calendar', [CalendarController::class, 'addToCalendar'])->name('events.add-to-calendar');
+});
 
-
-
-Route::post('/events/{event}/rate', [EventController::class, 'rate'])->name('events.rate');
-Route::post('/events/{event}/register', [EventController::class, 'register'])->name('events.register');
-Route::delete('/events/{event}/unregister',[EventController::class, 'unregister'])->name('events.unregister');
-Route::get('/events/{event}/comments', [EventController::class, 'comments'])->name('events.comments');
-Route::delete('/comments/{commentId}', [CommentController::class, 'deleteComment'])->name('comments.delete');
-Route::get('/events/{eventId}/comments', [EventController::class, 'showEventComments']);
+Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
 
 Route::group(['middleware' => ['auth', 'admin']], function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -64,3 +68,4 @@ Route::group(['middleware' => ['auth', 'admin']], function () {
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 });
+

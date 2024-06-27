@@ -66,4 +66,8 @@ class User extends Authenticatable
     {
         return $this->role === $role;
     }
+    public function calendarEvents()
+    {
+        return $this->belongsToMany(Event::class, 'calendar_user_event');
+    }
 }

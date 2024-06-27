@@ -17,6 +17,11 @@ class Event extends Model
         return $this->belongsTo(User::class);
     }
 
+    // Many-to-many relationship with User through calendar_events pivot table
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'calendar_user_event')->withTimestamps();
+    }
     public function comments()
     {
         return $this->hasMany(Comment::class);
@@ -28,5 +33,9 @@ class Event extends Model
     public function registrations()
     {
         return $this->hasMany(Register::class);
+    }
+    public function calendarEvents()
+    {
+        return $this->hasMany(CalendarEvent::class);
     }
 }

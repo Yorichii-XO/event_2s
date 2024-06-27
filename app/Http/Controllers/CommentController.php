@@ -30,10 +30,13 @@ class CommentController extends Controller
         $event = Event::with('user', 'comments.user')->findOrFail($eventId);
         $user = Auth::user(); // Get the current authenticated user
     
+        // Check if the current user is authenticated and has the admin role
+        $currentUser = $user ? ['id' => $user->id, 'role' => $user->role] : null;
+        
         return response()->json([
             'event' => $event,
             'comments' => $event->comments,
-            'currentUser' => $user ? ['id' => $user->id, 'role' => $user->role] : null // Include current user info
+            'currentUser' => $currentUser
         ]);
     }
     

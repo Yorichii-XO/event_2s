@@ -23,9 +23,9 @@ class LoginController extends Controller
 
             // Authentication passed...
             if ($user->role == 'admin') {
-                return redirect('/');
+                return redirect('/')->with('success', 'Login successful!');
             } else {
-                return redirect('/')->with('success', 'Login successful!');;
+                return redirect('/')->with('success', 'Login successful!');
             }
         }
 
